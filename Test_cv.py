@@ -12,7 +12,8 @@ import argparse
 import numpy as np
 import cv2
 import cv2.dnn
-from input_processing import classes
+#from input_processing import classes
+classes = {'brown': 0, 'orange': 1, 'yellow': 2}
 
 def evaluate_cv2Dnn(image, model):
     # resize image
@@ -31,9 +32,22 @@ def evaluate_cv2Dnn(image, model):
             return key
     return 'None'
 
+
+def grabcut_genmask(image, iter):
+    IMG_H, IMG_W = image.shape[:2]
+    image = cv2.resize(image, (IMG_W, IMG_H))
+    mask = np.zeros(image.shape[:2], np.uint8)
+    bgdModel = np.zeros((1, 65), np.float64)
+    fgdModel = np.zeros((1, 65), np.float64)
+    rect = (1, 1, IMG_W, IMG_H)
+    cv2.grabCut(image, mask, rect, bgdModel, fgdModel, iter, cv2.GC_INIT_WITH_RECT)
+    #mark2 is 0 with cv.GC_PR_BGD and cv.GC_BGD
+    mask2 = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
+    return mask2
+
 if __name__ =='__main__':
     parser = argparse.ArgumentParser(description='Test')
-    parser.add_argument('--image', type=str, default='YL (18).jpg', metavar='N',
+    parser.add_argument('--image', type=str, default='br.jpg', metavar='N',
                         help='input batch size for training (default: 64)')
     parser.add_argument('--use-cuda', action='store_true', default= False)
 
@@ -42,15 +56,20 @@ if __name__ =='__main__':
 
     model = cv2.dnn.readNetFromONNX('tomato.onnx')
 
-    image = cv2.imread(args.image)
+    image_raw = cv2.imread(args.image)
+    image = cv2.resize(image_raw, (200, 200))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    #mask = grabcut_genmask(image, 6)
+    #image = image * mask[:, :, np.newaxis]
+
     pred_type = evaluate_cv2Dnn(image, model)
     print(pred_type)
-    cv2.putText(image, pred_type,
+    cv2.putText(image_raw, pred_type,
                 (10, 30),
                 cv2.FONT_HERSHEY_COMPLEX,
                 1,
                 (255, 255, 255),
                 2)
     cv2.namedWindow('Predict', cv2.WINDOW_NORMAL)
-    cv2.imshow('Predict', image)
+    cv2.imshow('Predict', image_raw)
     cv2.waitKey(0)

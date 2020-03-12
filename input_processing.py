@@ -14,7 +14,7 @@ import pandas as pd
 
 # Read image data
 # Red tomato
-is_training = False
+is_training = True
 
 classes = {'brown': 0, 'orange': 1, 'yellow': 2}
 
@@ -23,7 +23,7 @@ if is_training:
 else:
     data_folder = 'testing\\'
 
-def process_input(class_dict, data_folder, resize_flag = False, size = 200, hsv_flag = False):
+def process_input(class_dict, data_folder, resize_flag = True, size = 200, hsv_flag = True):
     dataset_labels = []
     for id_cls, cls in enumerate(list(class_dict.keys())):
         cls_folder = cls + '\\'
@@ -63,4 +63,4 @@ def process_input(class_dict, data_folder, resize_flag = False, size = 200, hsv_
     pd.DataFrame(dataset_labels).to_csv(feature_pth + 'label.csv')
 
 if __name__ == '__main__':
-    process_input(classes, data_folder, resize_flag = True, hsv_flag= False)
+    process_input(classes, data_folder, resize_flag = True, hsv_flag= True)
